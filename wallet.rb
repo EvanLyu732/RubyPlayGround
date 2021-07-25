@@ -27,7 +27,7 @@ class User
   # User can send money to another user
   def transfer(userId, dest, money)
     # search dest in system paltform
-    if !dest
+    unless dest
       puts "The user is not exist #{destId.name.to_s}"
     end
     return flase
@@ -53,6 +53,7 @@ class User
 class Wallet
   attr_reader :id
   attr_accessor :balance
+
   def initialize(id, balance)
     @id = id
     @balance = balance
@@ -74,48 +75,54 @@ class Transaction
 end
 
 #define the relationship between user A and Wallet A in here
-#class System
-#  #hash1 user-> wallet
-#  #hash2 user-> transaction
+class System
+  #hash1 user-> wallet
+  #hash2 user-> transaction
+  include Singleton
 
-#  @@userList = Hash.new
-#  @@usertoWallet = Hash.new
-#  @@usertoTransaction = Hash.new 
+  @@userList = Hash.new
+  @@usertoWallet = Hash.new
+  @@usertoTransaction = Hash.new 
 
-#  def initialize()
+  def initialize()
 
-#  end
+  end
 
-#  def linkUser()
+  def linkUserAndWallet(user, wallet)
 
-#  end
+  end
+
+  def getWalletByUser(user)
+    wallet = @@usertoWallet[:user]
+  end
 
 
-#  def addUserToWallet(user, wallet)
-#    usertoWallet[:user] = wallet
-#  end
+  def addUserToWallet(user, wallet)
+    usertoWallet[:user] = wallet
+  end
 
-#  def recordTransaction()
+  def recordTransaction()
 
-#  end
+  end
 
   
-#  def getTopNRichestUser(n)
+  def getTopNRichestUser(n)
 
-#  end
-#end
-
-
+  end
+end
 
 
-#def main()
-#  #1. Create Sysetm
+
+
+def main()
+  #1. Create Sysetm
+  walletSystem = System.instance 
   
-#  #2. Create User
+  #2. Create User
   
-#  #3. Create Wallet
+  #3. Create Wallet
 
-#end
-  
+end
 
 
+end
