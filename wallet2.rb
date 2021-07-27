@@ -2,6 +2,9 @@ require 'date'
 require 'singleton'
 
 class User
+  attr_reader :userid, :wallet, :system
+  attr_accessor :userName
+
   def initialize(userid, userName, wallet, system) 
     @userid = userid
     @userName = userName
@@ -11,31 +14,31 @@ class User
 
   # User can deposit money into her wallet
   def deposit(money)
-    wallet.balance += money
-    depositTransaction = Transaction.new(userName, userName, money, DateTime.now)
-    system.recordTransaction(self, deposit)
+    @wallet.balance += money
+    depositTransaction = Transaction.new(@userName, @userName, money, DateTime.now)
+    @system.recordTransaction(self, depositTransaction)
     puts "#{@userName} deposit #{money} to wallet, current balance is #{wallet.balance}"
   end
 
   # User can withdraw money from her wallet def withdraw(money)
   def withdraw(money)
     unless wallet.balance >= money then
-      wallet.balance -= money 
-      depositTransaction = Transaction.new(userName, userName, -money, DateTime.now)
-      system.recordTransaction(self, deposit)
+      @wallet.balance -= money 
+      depositTransaction = Transaction.new(@userName, @userName, -money, DateTime.now)
+      @system.recordTransaction(self, depositTransaction)
       puts "#{@userName} withdraw sucessed!, current balance is #{wallet.balance}"
     else
-      puts "#{@userName} do not have enough money to withdraw #{money}, current balance is #{wallet.balance}"
+      puts "#{@userName} do not have enough money for withdraw #{money}, current balance is #{wallet.balance}"
     end
   end
 
   # User can send money to another user
   def transfer(money, destUser)
     unless wallet.balance >= money then
-      wallet.balance -= money
+      @wallet.balance -= money
       destUser.wallet.balance += money
-      depositTransaction = Transaction.new(userName, destUesr.userName, -money, DateTime.now)
-      system.recordTransaction(self, deposit)
+      depositTransaction = Transaction.new(@userName, destUesr.userName, -money, DateTime.now)
+      @system.recordTransaction(self, depositTransaction)
       puts "#{@userName} transfer #{money} to #{destUser.userName}, current balance for #{@userName} is #{wallet.balance}"
     else 
       puts "#{@userName} do not have enough money to transfer #{money}, current balance is #{wallet.balance}"
@@ -48,7 +51,7 @@ end
 #Get total income and outcome of a special day
 #User can see her wallet transactino history
 class Wallet
-  attr_reader :id
+  attr_reader :id, :system
   attr_accessor :balance
 
   def initialize(id, balance=0.0, system)
@@ -78,28 +81,31 @@ class SystemApp
   #hash1 user-> wallet
   #hash2 user-> transaction
 
-  @@userList = Hash.new
   @@userIdToUser = Hash.new
   @@usertoWallet = Hash.new
   @@usertoTransaction = Hash.new 
 
   @@transactionArray = Array.new
 
-  attr_reader :userList, :usertoWallet
+  attr_reader :usertoWallet
   attr_accessor :usertoTransaction
 
-  def initialize(user, wallet, transactionArray)
+  def initialize(createdate, user, wallet, transactionArray, transaction)
+    @createdate = createdate
     @user = user
     @wallet = wallet
     @transactionArray = transactionArray
+    @transaction = transaction
   end
 
   def linkUserAndWallet(user, wallet)
-    usertoWallet[:user] = wallet
+    # usertoWallet = Hash[:user => wallet]
+    # usertoWallet.store(:user => wallet)
+    @@usertoWallet[:user] = wallet
   end
 
   def linkUserAndTransactionHistory(user, transactionArray)
-    usertoTransaction[:user] = transactionArray
+    @@usertoTransaction[:user] = transactionArray
   end
 
   def getWalletByUser(user)
@@ -107,9 +113,9 @@ class SystemApp
   end
 
   def recordTransaction(user, transaction)
-    transactionArray = usertoTransaction[:user]
-    transactionArray << transaction
-    usertoTransaction[:user] = transactionArray
+    @@transactionArray = @@usertoTransaction[:user]
+    @@transactionArray << transaction
+    @@usertoTransaction[:user] = transactionArray
     puts "Transaction recorded successed, #{transaction.start} to #{transaction.dest} for #{transaction.money} #{transaction.date} "
   end
 
@@ -131,6 +137,7 @@ class SystemApp
 
   def getTotalIncomeForUserByDate(user, date)
     transactionArray = usertoTransaction[:user]
+
     income = 0.0
     outcome = 0.0
 
@@ -152,7 +159,7 @@ end
 
 def main()
   #1. Create Sysetm
-  walletSystem = SystemApp.new(nil, nil, nil) 
+  walletSystem = SystemApp.new(DateTime.now, nil, nil, nil, nil) 
 
   #2. Create Wallet
   alexwallet = Wallet.new(2222222, 0.0, walletSystem)
@@ -167,7 +174,9 @@ def main()
   alex.deposit(2.2)
 
   #First user withdraw money
-  alex.withdraw(1.2)
+  #2. Create second user
+
+  #3. Create second users wallet
 end
 
 main()
