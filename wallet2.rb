@@ -85,15 +85,15 @@ end
 class SystemApp
   #hash1 user-> wallet
   #hash2 user-> transaction
+  include Singleton
 
-  @@userIdToUser = Hash.new
-  @@usertoWallet = Hash.new
+  @@usertoWallet = Hash.new 
   @@usertoTransaction = Hash.new 
 
   attr_reader :usertoWallet
   attr_accessor :usertoTransaction
 
-  def initialize(createdate, user, wallet, transactionArray, transaction)
+  def initialize(createdate=DateTime.now, user=nil, wallet=nil, transactionArray=nil, transaction=nil)
     @createdate = createdate
     @user = user
     @wallet = wallet
@@ -163,7 +163,8 @@ end
 
 def main()
   #1. Create Sysetm
-  walletSystem = SystemApp.new(DateTime.now, nil, nil, nil, nil) 
+  # walletSystem = SystemApp.new(DateTime.now, nil, nil, nil, nil) 
+  walletSystem = SystemApp.instance
 
   #2. Create Wallet
   alexwallet = Wallet.new(2222222, 0.0, walletSystem)
