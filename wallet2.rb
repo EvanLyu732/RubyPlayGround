@@ -22,11 +22,11 @@ class User
 
   # User can withdraw money from her wallet def withdraw(money)
   def withdraw(money)
-    unless wallet.balance >= money then
+    unless wallet.balance < money then
       @wallet.balance -= money 
       depositTransaction = Transaction.new(@userName, @userName, -money, DateTime.now)
       @system.recordTransaction(self, depositTransaction)
-      puts "#{@userName} withdraw sucessed!, current balance is #{wallet.balance}"
+      puts "#{@userName} withdraw #{money} sucessed!, current balance is #{wallet.balance}"
     else
       puts "#{@userName} do not have enough money for withdraw #{money}, current balance is #{wallet.balance}"
     end
@@ -34,15 +34,20 @@ class User
 
   # User can send money to another user
   def transfer(money, destUser)
-    unless wallet.balance >= money then
+    unless wallet.balance < money then
       @wallet.balance -= money
       destUser.wallet.balance += money
-      depositTransaction = Transaction.new(@userName, destUesr.userName, -money, DateTime.now)
+      depositTransaction = Transaction.new(@userName, destUser.userName, -money, DateTime.now)
       @system.recordTransaction(self, depositTransaction)
       puts "#{@userName} transfer #{money} to #{destUser.userName}, current balance for #{@userName} is #{wallet.balance}"
     else 
       puts "#{@userName} do not have enough money to transfer #{money}, current balance is #{wallet.balance}"
     end
+  end
+
+  #show users balance
+  def showbalance
+    puts "#{@userName} has #{self.wallet.balance}"
   end
 end
 
@@ -85,8 +90,6 @@ class SystemApp
   @@usertoWallet = Hash.new
   @@usertoTransaction = Hash.new 
 
-  @@transactionArray = Array.new
-
   attr_reader :usertoWallet
   attr_accessor :usertoTransaction
 
@@ -104,7 +107,8 @@ class SystemApp
     @@usertoWallet[:user] = wallet
   end
 
-  def linkUserAndTransactionHistory(user, transactionArray)
+  def linkUserAndTransactionHistory(user)
+    transactionArray = Array.new
     @@usertoTransaction[:user] = transactionArray
   end
 
@@ -113,14 +117,14 @@ class SystemApp
   end
 
   def recordTransaction(user, transaction)
-    @@transactionArray = @@usertoTransaction[:user]
-    @@transactionArray << transaction
+    transactionArray = @@usertoTransaction[:user]
+    transactionArray << transaction
     @@usertoTransaction[:user] = transactionArray
-    puts "Transaction recorded successed, #{transaction.start} to #{transaction.dest} for #{transaction.money} #{transaction.date} "
+    puts "Transaction recorded successed, #{transaction.start} to #{transaction.dest} for #{transaction.money} on #{transaction.date} "
   end
 
   def getTransaction(user)
-    transactionArray = usertoTransaction[:user]
+    transactionArray = @@usertoTransaction[:user]
     puts "#{user.userName} has #{transactionArray.length()} transactions"
   end
 
@@ -136,7 +140,7 @@ class SystemApp
   # end
 
   def getTotalIncomeForUserByDate(user, date)
-    transactionArray = usertoTransaction[:user]
+    transactionArray = @@usertoTransaction[:user]
 
     income = 0.0
     outcome = 0.0
@@ -152,7 +156,7 @@ class SystemApp
         end
       end
     end
-    puts "#{user.userName} income for #{date} is #{income}, outcome is #{outcome} "
+    puts "#{user.userName} total income for #{transactionDate} is #{income}, total outcome is #{outcome} "
   end
 end
 
@@ -170,13 +174,48 @@ def main()
   #link user and wallet
   walletSystem.linkUserAndWallet(alex, alexwallet)
 
+  #link user to transactionArray
+  walletSystem.linkUserAndTransactionHistory(alex)
+
   #First user deposit money
   alex.deposit(2.2)
 
-  #First user withdraw money
-  #2. Create second user
+  #first user try to withdraw money
+  alex.withdraw(1.1)
 
-  #3. Create second users wallet
+  #now alex has 1.1 in his wallet
+  alex.withdraw(1.2) #This will print refused message
+
+  #Create the second User wallet first
+  evanwallet = Wallet.new(123123, 0.0, walletSystem)
+
+  #create user evan
+  evan = User.new(1231, "Evan", evanwallet, walletSystem)
+
+  #link user and wallet
+  walletSystem.linkUserAndWallet(evan, evanwallet)
+
+  #link user to transactionArray
+  walletSystem.linkUserAndTransactionHistory(evan)
+  
+  #Second user deposit money
+  evan.deposit(3.2)
+
+  #second user withdraw money
+  evan.withdraw(1.0) 
+
+  #seond user transfer money to first user
+  evan.transfer(1.1, alex)
+
+  #show evans balance
+  evan.showbalance
+
+  #get totalincome and outcome for special day
+  walletSystem.getTotalIncomeForUserByDate(evan, 07/28/2021)
+
+  #get evan's transaction history, return an array of transaction
+  walletSystem.getTransaction(evan)
+
 end
 
 main()
